@@ -10,6 +10,8 @@ import Signin from "./src/comps/pages/Signin";
 import Signup from "./src/comps/pages/Signup";
 import Settings from "./src/comps/pages/Settings";
 import Splash from "./src/comps/pages/Splash";
+import { useStoreStr } from "./src/stores/storeStr";
+import { Gstr } from "./src/libs/global";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -17,54 +19,39 @@ const Stack = createNativeStackNavigator();
 export default function App() {
 
   const [isLoading, setIsLoading] = useState(true);
-  const [userToken, setUserToken] = useState(null);
-
-  const setToken = async (token) => {
-    if (token) {
-      await AsyncStorage.setItem("userToken", token);
-    } else {
-      await AsyncStorage.removeItem("userToken");
-    }
-    setUserToken(token);
-  };
+  const setStr = useStoreStr(state=>state.setStr)
+  const token = useStoreStr(state=>state.token)
 
   useEffect(() => {
 
     const bootstrapAsync = async () => {
-      const userToken = await AsyncStorage.getItem("userToken");
-      setUserToken(userToken);
-      setIsLoading(false);
+      try{
+        const token = await AsyncStorage.getItem("token");
+        setStr('token', token)
+        Gstr.token = token
+        setIsLoading(false);
+      } catch(error){console.log(error)}
     };
 
     bootstrapAsync();
   }, []);
 
-  if (isLoading === true) {
+  if (isLoading) {
     return null;
   }
 
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        {userToken === null ? 
+        {token === null ? 
           <>
-            <Stack.Screen name="Signin" options={{ headerShown: false }}>
-              {() => <Signin setToken={setToken} />}
-            </Stack.Screen>
-            <Stack.Screen name="Signup" options={{ headerShown: false }}>
-              {() => <Signup setToken={setToken} />}
-            </Stack.Screen>
+            <Stack.Screen name="Signin" options={{ headerShown: false }} component={Signin}/>
+            <Stack.Screen name="Signup" options={{ headerShown: false }} component={Signup}/>
           </>
           : 
           <Stack.Screen name="Tab" options={{ headerShown: false }}>
             {() => (
-              <Tab.Navigator
-                screenOptions={{
-                  headerShown: false,
-                  tabBarActiveTintColor: "tomato",
-                  tabBarInactiveTintColor: "gray",
-                }}
-              >
+              <Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: "tomato", tabBarInactiveTintColor: "gray" }} >
                 <Tab.Screen
                   name="TabHome"
                   options={{
@@ -78,23 +65,20 @@ export default function App() {
                     <Stack.Navigator>
                       <Stack.Screen
                         name="Home"
+                        component={Home}
                         options={{
                           title: "My App",
                           headerStyle: { backgroundColor: "red" },
                           headerTitleStyle: { color: "white" },
                         }}
-                      >
-                        {() => <Home />}
-                      </Stack.Screen>
-
+                      />
                       <Stack.Screen
                         name="Profile"
+                        component={Profile}
                         options={{
                           title: "User Profile",
                         }}
-                      >
-                        {() => <Profile />}
-                      </Stack.Screen>
+                      />
                     </Stack.Navigator>
                   )}
                 </Tab.Screen>
@@ -111,12 +95,11 @@ export default function App() {
                     <Stack.Navigator>
                       <Stack.Screen
                         name="Settings"
+                        component={Settings}
                         options={{
                           title: "Settings",
                         }}
-                      >
-                        {() => <Settings setToken={setToken} />}
-                      </Stack.Screen>
+                      />
                     </Stack.Navigator>
                   )}
                 </Tab.Screen>

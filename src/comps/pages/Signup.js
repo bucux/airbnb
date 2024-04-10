@@ -17,6 +17,7 @@ export default function Signup() {
   const [description, setDescription] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [message, setMessage] = useState('')
   
   const submit = async () => {
     if(email && username && description && password && confirmPassword){
@@ -27,9 +28,12 @@ export default function Signup() {
           description : description,
           password : password,
         }
-        const datas = await postAxios('user/sign_up', body)
-        Gstr.token = datas.token
-        setStr('token', datas.token)
+        if(datas.token){ // fetch réussi
+          const datas = await postAxios('user/sign_up', body)
+          await AsyncStorage.setItem("token", datas.token);
+          Gstr.token = datas.token
+          setStr('token', datas.token)
+        } else {setMessage(datas.error)}
       }
     } else{ // afficher l'alerte
 
